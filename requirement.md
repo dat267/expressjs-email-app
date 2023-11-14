@@ -11,12 +11,12 @@ In this assignment, you will develop a simple web-based Email System with limite
 - Single email detail page (lets user reads an email)
 - Outbox page (show sent emails)
 - Compose page (let user create and send an email to one receiver)
-    - (Optional) let user attach a single file per email.
+  - (Optional) let user attach a single file per email.
 - Sign-out feature
 
 ## B. Specific Requirements & Restrictions
 
-- The application must operate on http://localhost:8000/
+- The application must operate on <http://localhost:8000/>
 - The application must be developed with only the packages listed in the provided `package.json`. Students need to create a new folder for your project and run npm install to install the required packages.
 - The application must use the MySQL database named `wpr2023`, with username `wpr`, password `fit2023`, on host `localhost`, port `3306`.
 - You must not use any external CSS/JS library or any HTML template that is not created by yourself.
@@ -27,12 +27,12 @@ In this assignment, you will develop a simple web-based Email System with limite
 
 Write a database setup script named dbsetup.js under the project’s root folder. This script must create all required tables and initialize the following data:
 
-- At least 3 users, one of them has the email address a@a.com
-- At least 8 email messages between these users. a@a.com has received at least 2 emails from others and and sent at least 2 email to another user.
+- At least 3 users, one of them has the email address <a@a.com>
+- At least 8 email messages between these users. <a@a.com> has received at least 2 emails from others and and sent at least 2 email to another user.
 
 ### 2. Sign-in page (homepage)
 
-This is the homepage of the application. Users should be able to visit this page via http://localhost:8000/. This page has to provide a link to the Sign-up page. This sign-in page lets user enter username and password to sign in. Suitable error messages should be showed to the user when he/she enters wrong login credentials. Upon successful sign-in, the user should be redirected to the inbox page. After signing in, user should not be asked to provide username and password again. Visiting the sign-in page again after signing in will just redirect the user to the inbox page.
+This is the homepage of the application. Users should be able to visit this page via <http://localhost:8000/>. This page has to provide a link to the Sign-up page. This sign-in page lets user enter username and password to sign in. Suitable error messages should be showed to the user when he/she enters wrong login credentials. Upon successful sign-in, the user should be redirected to the inbox page. After signing in, user should not be asked to provide username and password again. Visiting the sign-in page again after signing in will just redirect the user to the inbox page.
 
 (*) You can use any method possible to persist the sign-in state of the user, but the common method is to use cookies.
 
@@ -64,7 +64,7 @@ This Inbox page should show a list of received emails. This list should show the
 
 This Inbox page should be paginated. It means that you don’t show all emails in one page but should show 5 emails per page instead. You should provide the user with links to different pages of the inbox.
 
-#### Advanced requirement:
+#### Advanced requirement
 
 Show checkboxes next to the emails like in the above picture of the Gmail inbox. Add a Delete button in this Inbox page which allows the user to delete the selected emails. This deletion should not reload the web page so you should create an API to delete emails and use fetch in client’s JavaScript to send requests to that API. The deleted emails should be removed from this page using client JS.
 
