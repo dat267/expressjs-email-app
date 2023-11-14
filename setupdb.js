@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2')
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -6,10 +6,10 @@ const connection = mysql.createConnection({
     password: 'fit2023',
     database: 'wpr2023',
     port: '3306'
-});
+})
 
 connection.connect(err => {
-    if (err) throw err;
-    console.log('Connected!');
+    if (err) throw err
+    console.log('Connected!')
 
 });
