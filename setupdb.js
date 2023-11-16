@@ -69,6 +69,12 @@ connection.query(insertUsers, (err) => {
   console.log('Users inserted')
 })
 
+const clearEmailTable = `DELETE FROM Email`
+connection.query(clearEmailTable, (err) => {
+  if (err) throw err
+  console.log('Cleared Email table')
+})
+
 // Insert Emails
 const insertEmails = `
     INSERT IGNORE INTO Email(senderId, recipientId, subject, body)
