@@ -3,7 +3,7 @@ entity "User" {
   + id: INTEGER <<PK>>
   --
   fullName: VARCHAR
-  email: VARCHAR
+  email: VARCHAR <<UNIQUE>>
   password: VARCHAR
 }
 

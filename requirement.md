@@ -30,6 +30,42 @@ Write a database setup script named dbsetup.js under the project’s root folder
 - At least 3 users, one of them has the email address <a@a.com>
 - At least 8 email messages between these users. <a@a.com> has received at least 2 emails from others and and sent at least 2 email to another user.
 
+My solution:
+
+```plantuml
+@startuml emailsys
+entity "User" {
+  + id: INTEGER <<PK>>
+  --
+  fullName: VARCHAR
+  email: VARCHAR <<UNIQUE>>
+  password: VARCHAR
+}
+
+entity "Email" {
+  + id: INTEGER <<PK>>
+  --
+  senderId: INTEGER <<FK>>
+  recipientId: INTEGER <<FK>>
+  subject: VARCHAR
+  body: TEXT
+  timeSent: DATETIME
+}
+
+entity "Attachment" {
+  + id: INTEGER <<PK>>
+  --
+  emailId: INTEGER <<FK>>
+  fileName: VARCHAR
+  fileData: BLOB
+}
+
+User ||--o{ Email: Sends
+User ||--o{ Email: Receives
+Email ||--o{ Attachment
+@enduml
+```
+
 ### 2. Sign-in page (homepage)
 
 This is the homepage of the application. Users should be able to visit this page via <http://localhost:8000/>. This page has to provide a link to the Sign-up page. This sign-in page lets user enter username and password to sign in. Suitable error messages should be showed to the user when he/she enters wrong login credentials. Upon successful sign-in, the user should be redirected to the inbox page. After signing in, user should not be asked to provide username and password again. Visiting the sign-in page again after signing in will just redirect the user to the inbox page.
