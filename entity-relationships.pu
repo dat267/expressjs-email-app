@@ -1,0 +1,31 @@
+@startuml emailsys
+entity "User" {
+  + id: INTEGER <<PK>>
+  --
+  fullName: VARCHAR
+  email: VARCHAR
+  password: VARCHAR
+}
+
+entity "Email" {
+  + id: INTEGER <<PK>>
+  --
+  senderId: INTEGER <<FK>>
+  recipientId: INTEGER <<FK>>
+  subject: VARCHAR
+  body: TEXT
+  timeSent: DATETIME
+}
+
+entity "Attachment" {
+  + id: INTEGER <<PK>>
+  --
+  emailId: INTEGER <<FK>>
+  fileName: VARCHAR
+  fileData: BLOB
+}
+
+User ||--o{ Email: Sends
+User ||--o{ Email: Receives
+Email ||--o{ Attachment
+@enduml
