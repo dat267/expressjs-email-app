@@ -1,0 +1,50 @@
+@startuml emailsys
+
+class User {
+ +username: String
+ +password: String
+ +fullName: String
+ +email: String
+ +signIn(): void
+ +signOut(): void
+}
+
+class Email {
+ +sender: User
+ +receiver: User
+ +subject: String
+ +body: String
+ +file: File
+ +send(): void
+ +delete(): void
+}
+
+class Inbox {
+ +user: User
+ +emails: List<Email>
+ +displayEmails(): void
+ +paginate(): void
+}
+
+class Outbox {
+ +user: User
+ +emails: List<Email>
+ +displayEmails(): void
+ +paginate(): void
+}
+
+class Compose {
+ +user: User
+ +recipient: User
+ +subject: String
+ +body: String
+ +file: File
+ +sendEmail(): void
+}
+
+User "1" -- "0..*" Email : sends
+User "1" -- "1" Inbox : has
+User "1" -- "1" Outbox : has
+User "1" -- "1" Compose : uses
+
+@enduml

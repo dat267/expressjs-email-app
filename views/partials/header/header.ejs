@@ -1,0 +1,9 @@
+<header>
+  <nav id="top-navbar">
+    <a href="/"><%- auth ? auth.email : "Home" %></a>
+    <a href="/inbox">Inbox</a>
+    <a href="/outbox">Outbox</a>
+    <a href="/compose">Compose</a>
+    <%- auth ? `<a href="/signout">Sign Out</a>` : null %>
+  </nav>
+</header>
