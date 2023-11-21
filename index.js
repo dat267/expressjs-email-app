@@ -14,13 +14,13 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
     host: 'localhost',
     user: 'wpr',
     password: 'fit2023',
     database: 'wpr2023',
     port: '3306'
-})
+}).promise()
 
 function renderPage(res, title, main, user) {
     res.render('layout', { title: title, main: main, user: user })
@@ -52,13 +52,36 @@ function generateUniqueAccessToken() {
 
 function checkIfTokenExists(token) {
     const query = 'SELECT * FROM User WHERE token = ?'
-    const results = connection.query(query, [token])
-    return results.length > 0
+    connection.query(query, [token], (err, results) => {
+        if (err) throw err
+        return results.length > 0
+    })
 }
 
 function getExpirationTime(seconds) {
     const unixTimeInSeconds = Math.floor(Date.now() / 1000)
     return unixTimeInSeconds + seconds / 1000
+}
+
+function authenticate(req) {
+    const email = req.cookies.email
+    const fullName = req.cookies.fullName
+    const token = req.cookies.accessToken
+    try {
+        const query = 'SELECT * FROM User WHERE email = ? AND expirationTime > NOW()'
+        connection.query(query, [email], (err, results) => {
+            if (err) throw err
+            if (results.length > 0 && results[0].token === token) {
+                const userObject = { email: email, fullName: fullName }
+                return userObject
+            } else {
+                return null
+            }
+        })
+    } catch (error) {
+        console.error(error)
+        return null
+    }
 }
 
 // Homepage (Sign-in page)
@@ -80,95 +103,90 @@ app.get('/signup', (req, res) => {
 
 // Inbox page route
 app.get('/inbox', (req, res) => {
-    if (!req.cookies.accessToken) {
-        return res.redirect('/')
+    const userObject = authenticate(req)
+    if (userObject) {
+        renderPage(res, 'Inbox', 'inbox', userObject)
     }
-    try {
-        const email = req.cookies.email
-        const fullName = req.cookies.fullName
-        const token = req.cookies.accessToken
-        const query = 'SELECT * FROM User WHERE email = ? AND expirationTime > NOW()'
-        connection.query(query, [email], (err, result) => {
-            if (err) throw err
-            if (result.length > 0 && result[0].token === token) {
-                const userObject = { email: email, fullName: fullName }
-                renderPage(res, 'Inbox', 'inbox', userObject)
-            } else {
-                res.redirect('/')
-            }
-        })
-    } catch (error) {
-        console.error('Error decrypting user data:', error)
+    else {
         res.redirect('/')
     }
 })
 
+
 // Outbox page route
 app.get('/outbox', (req, res) => {
-    if (!req.cookies.userAccessToken) {
-        return res.redirect('/')
+    const userObject = authenticate(req)
+    if (userObject != null) {
+        renderPage(res, 'Outbox', 'outbox', userObject)
     }
-    const email = req.cookies.email
-    const fullName = req.cookies.fullName
-    const userObject = { email: email, fullName: fullName }
-    renderPage(res, 'Outbox', 'outbox', userObject)
+    else {
+        res.redirect('/')
+    }
 })
 
 // Compose page route
 app.get('/compose', (req, res) => {
-    if (!req.cookies.userAccessToken) {
-        return res.redirect('/')
+    const userObject = authenticate(req)
+    if (userObject != null) {
+        renderPage(res, 'Compose', 'compose', userObject)
     }
-    const email = req.cookies.email
-    const fullName = req.cookies.fullName
-    const userObject = { email: email, fullName: fullName }
-    renderPage(res, 'Compose', 'compose', userObject)
+    else {
+        res.redirect('/')
+    }
 })
 
 app.post('/signin', (req, res) => {
     const { email, password } = req.body
     const oneDay = 60 * 60 * 24 * 1000
     const query = 'SELECT * FROM User WHERE email = ?'
-    connection.query(query, [email], async (err, result) => {
+    connection.query(query, [email], (err, results) => {
         if (err) throw err
-        if (result.length > 0 && checkPassword(password, result[0].password)) {
+        if (results.length > 0 && checkPassword(password, results[0].password)) {
             const token = generateUniqueAccessToken()
             const expirationTime = getExpirationTime(oneDay)
             const insertToken = 'UPDATE User SET token = ?, expirationTime = FROM_UNIXTIME(?) WHERE email = ?;'
-            connection.query(insertToken, [token, expirationTime, result[0].email], (err) => {
+            connection.query(insertToken, [token, expirationTime, results[0].email], (err, tokenResults) => {
                 if (err) throw err
+                res.cookie('email', email, { maxAge: oneDay })
+                res.cookie('fullName', results[0].fullName, { maxAge: oneDay })
+                res.cookie('accessToken', token, { maxAge: oneDay })
+                res.redirect('/inbox')
             })
-            res.cookie('email', email, { maxAge: oneDay })
-            res.cookie('fullName', result[0].fullName, { maxAge: oneDay })
-            res.cookie('accessToken', token, { maxAge: oneDay })
-            res.redirect('/inbox')
         } else {
             res.send('Login failed. Please check your email and password.')
         }
     })
+
 })
 
-
+app.post('/checkEmail', (req, res) => {
+    const { email } = req.body
+    const query = `SELECT * FROM User WHERE email = ?`
+    connection.query(query, [email], (err, results) => {
+        if (err) throw err
+        if (results.length > 0) {
+            res.json({ exists: true })
+        } else {
+            res.json({ exists: false })
+        }
+    })
+})
 // Signup route
 app.post('/signup', (req, res) => {
     const { fullName, email, password, rePassword } = req.body
-    // Validate form data
     if (!fullName || !email || !password || password !== rePassword) {
         return res.send('Invalid form data. Please fill in all fields and ensure passwords match.')
     }
-    // Check if the email is already used
     const checkEmailQuery = 'SELECT * FROM User WHERE email = ?'
     connection.query(checkEmailQuery, [email], (err, result) => {
         if (err) throw err
         if (result.length > 0) {
             return res.send('Email address is already in use. Please choose another.')
         }
-        // Insert new user into the database
         const hashedPassword = hashPassword(password)
         const insertUserQuery = 'INSERT INTO User (fullName, email, password) VALUES (?, ?, ?)'
         connection.query(insertUserQuery, [fullName, email, hashedPassword], (err) => {
             if (err) throw err
-            // Send success message
             res.send('User created successfully. You can now <a href="/">sign in</a>.')
         })
     })

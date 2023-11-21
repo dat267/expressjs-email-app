@@ -1,16 +1,59 @@
 <main>
-  <form action="/signup" method="post">
+  <form id="signupForm" action="/signup" method="post">
     <h1>Sign Up</h1>
     <label>Full Name:</label><br>
-    <input type="text" name="fullName" required><br>
+    <input id="fullNameInput" type="text" name="fullName" required><br>
     <label>Email:</label><br>
-    <input type="email" name="email" required><br>
+    <input id="emailInput" type="email" name="email" required><br>
     <label>Password:</label><br>
-    <input type="password" name="password" required><br>
+    <input id="passwordInput" type="password" name="password" required><br>
     <label>Repeat Password:</label><br>
-    <input type="password" name="rePassword" required><br>
+    <input id="rePasswordInput" type="password" name="rePassword" required><br>
     <input type="submit" value="Sign Up">
   </form>
   <br>
   <a href="/">Sign In</a>
 </main>
+<script>
+  document.getElementById('signupForm').addEventListener('submit', function (e) {
+    e.preventDefault()
+    const email = document.getElementById('emailInput').value
+    fetch('/checkEmail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.exists) {
+          alert('This email address is already used.')
+        } else {
+          document.getElementById('signupForm').submit()
+        }
+      })
+  })
+
+  function validateForm() {
+    const fullName = document.getElementById('fullNameInput').value
+    const email = document.getElementById('emailInput').value
+    const password = document.getElementById('passwordInput').value
+    const rePassword = document.getElementById('rePasswordInput').value
+
+    // Check if the password is less than 6 characters long
+    if (password.length < 6) {
+      alert('Please enter a password that is at least 6 characters long.')
+      return false
+    }
+
+    // Check if the re-entered password does not match the password
+    if (password !== rePassword) {
+      alert('The passwords do not match.')
+      return false
+    }
+
+    // If all checks pass, return true
+    return true
+  }
+</script>
