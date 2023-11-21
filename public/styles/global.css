@@ -1,0 +1,77 @@
+/* Reset some default styles to ensure consistency across browsers */
+body,
+h1,
+h2,
+h3,
+p,
+ul,
+li {
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove list styles on ul, ol elements */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Apply a consistent box sizing model to all elements */
+* {
+  box-sizing: border-box;
+}
+
+/* Set a default font and adjust text styles */
+body {
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Remove underlines from links */
+a {
+  text-decoration: none;
+  color: #0066cc;
+}
+
+/* Style visited links */
+a:visited {
+  color: #4c2a85;
+}
+
+/* Style links on hover */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Set up a basic flex container */
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Apply basic styles to buttons */
+button,
+input[type="submit"],
+input[type="reset"] {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Style buttons on hover */
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+  background-color: #45a049;
+}
+
+/* Example media query for small screens */
+@media only screen and (max-width: 600px) {
+  /* Your responsive styles go here */
+}

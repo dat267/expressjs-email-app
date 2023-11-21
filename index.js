@@ -3,9 +3,10 @@ const mysql = require('mysql2')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
-const User = require('./models/User')
 
 const app = express()
+
+app.use(express.static('public'))
 
 // Set view engine to EJS
 app.set('view engine', 'ejs')
@@ -71,6 +72,42 @@ app.get('/inbox', (req, res) => {
     renderPage(res, 'Inbox', 'inbox', auth)
 })
 
+// Outbox page route
+app.get('/outbox', (req, res) => {
+    // Check if the user is authenticated
+    if (!req.session.userId) {
+        // Redirect to signin page if not authenticated
+        return res.redirect('/')
+    }
+    // Authenticated user information
+    const auth = {
+        userId: req.session.userId,
+        // Add other user information you want to pass to the template, e.g., fullName
+        fullName: req.session.fullName,
+        email: req.session.email
+    }
+    // Render the inbox page if authenticated
+    renderPage(res, 'Outbox', 'outbox', auth)
+})
+
+// Compose page route
+app.get('/compose', (req, res) => {
+    // Check if the user is authenticated
+    if (!req.session.userId) {
+        // Redirect to signin page if not authenticated
+        return res.redirect('/')
+    }
+    // Authenticated user information
+    const auth = {
+        userId: req.session.userId,
+        // Add other user information you want to pass to the template, e.g., fullName
+        fullName: req.session.fullName,
+        email: req.session.email
+    }
+    // Render the inbox page if authenticated
+    renderPage(res, 'Compose', 'compose', auth)
+})
+
 // Sign-in route
 app.post('/signin', (req, res) => {
     const { email, password, remember } = req.body
@@ -100,26 +137,21 @@ app.post('/signin', (req, res) => {
 // Signup route
 app.post('/signup', (req, res) => {
     const { fullName, email, password, rePassword } = req.body
-
     // Validate form data
     if (!fullName || !email || !password || password !== rePassword) {
         return res.send('Invalid form data. Please fill in all fields and ensure passwords match.')
     }
-
     // Check if the email is already used
     const checkEmailQuery = 'SELECT * FROM User WHERE email = ?'
     db.query(checkEmailQuery, [email], (err, result) => {
         if (err) throw err
-
         if (result.length > 0) {
             return res.send('Email address is already in use. Please choose another.')
         }
-
         // Insert new user into the database
         const insertUserQuery = 'INSERT INTO User (fullName, email, password) VALUES (?, ?, ?)'
         db.query(insertUserQuery, [fullName, email, password], (err) => {
             if (err) throw err
-
             // Send success message
             res.send('User created successfully. You can now <a href="/signin">sign in</a>.')
         })
@@ -140,7 +172,6 @@ app.get('/signout', (req, res) => {
         res.redirect('/')
     })
 })
-
 
 app.listen(8000, () => {
     console.log('Server started on port 8000')
