@@ -1,9 +1,16 @@
 <header>
   <nav id="top-navbar">
-    <a href="/"><%- auth ? auth.email : "Home" %></a>
-    <a href="/inbox">Inbox</a>
-    <a href="/outbox">Outbox</a>
-    <a href="/compose">Compose</a>
-    <%- auth ? `<a href="/signout">Sign Out</a>` : null %>
+    <% if(user) { %>
+      <span>
+        <%= user.email %>
+      </span>
+      <a href="/inbox">Inbox</a>
+      <a href="/outbox">Outbox</a>
+      <a href="/compose">Compose</a>
+      <a href="/signout">Sign Out</a>
+      <% } else { %>
+        <a href="/">Sign in</a>
+        <a href="/signup">Sign up</a>
+        <% } %>
   </nav>
 </header>
