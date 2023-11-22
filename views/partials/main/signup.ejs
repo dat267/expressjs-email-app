@@ -3,12 +3,16 @@
     <h1>Sign Up</h1>
     <label>Full Name:</label><br>
     <input id="fullNameInput" type="text" name="fullName" required><br>
+    <span id="fullNameError" style="color:red;"></span><br>
     <label>Email:</label><br>
     <input id="emailInput" type="email" name="email" required><br>
+    <span id="emailError" style="color:red;"></span><br>
     <label>Password:</label><br>
     <input id="passwordInput" type="password" name="password" required><br>
+    <span id="passwordError" style="color:red;"></span><br>
     <label>Repeat Password:</label><br>
     <input id="rePasswordInput" type="password" name="rePassword" required><br>
+    <span id="rePasswordError" style="color:red;"></span><br>
     <input type="submit" value="Sign Up">
   </form>
   <br>
@@ -16,44 +20,40 @@
 </main>
 <script>
   document.getElementById('signupForm').addEventListener('submit', function (e) {
-    e.preventDefault()
-    const email = document.getElementById('emailInput').value
-    fetch('/checkEmail', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email: email }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.exists) {
-          alert('This email address is already used.')
-        } else {
-          document.getElementById('signupForm').submit()
-        }
+    e.preventDefault();
+    if (validateForm()) {
+      const email = document.getElementById('emailInput').value;
+      fetch('/checkEmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({email: email}),
       })
-  })
+        .then(response => response.json())
+        .then(data => {
+          if (data.exists) {
+            document.getElementById('emailError').innerHTML = 'This email address is already used.';
+          } else {
+            document.getElementById('signupForm').submit();
+          }
+        });
+    }
+  });
 
   function validateForm() {
-    const fullName = document.getElementById('fullNameInput').value
-    const email = document.getElementById('emailInput').value
-    const password = document.getElementById('passwordInput').value
-    const rePassword = document.getElementById('rePasswordInput').value
-
-    // Check if the password is less than 6 characters long
+    const fullName = document.getElementById('fullNameInput').value;
+    const email = document.getElementById('emailInput').value;
+    const password = document.getElementById('passwordInput').value;
+    const rePassword = document.getElementById('rePasswordInput').value;
     if (password.length < 6) {
-      alert('Please enter a password that is at least 6 characters long.')
-      return false
+      document.getElementById('passwordError').innerHTML = 'Please enter a password that is at least 6 characters long.';
+      return false;
     }
-
-    // Check if the re-entered password does not match the password
     if (password !== rePassword) {
-      alert('The passwords do not match.')
-      return false
+      document.getElementById('rePasswordError').innerHTML = 'The passwords do not match.';
+      return false;
     }
-
-    // If all checks pass, return true
-    return true
+    return true;
   }
 </script>
