@@ -3,25 +3,27 @@ module.exports = {
         "browser": true,
         "commonjs": true,
         "es2021": true,
-        "node": true
+        "node": true,
     },
     "extends": "eslint:recommended",
     "overrides": [
         {
             "env": {
-                "node": true
+                "node": true,
             },
             "files": [
-                ".eslintrc.{js,cjs}"
+                ".eslintrc.{js,cjs}",
             ],
             "parserOptions": {
-                "sourceType": "script"
-            }
-        }
+                "sourceType": "script",
+            },
+        },
     ],
     "parserOptions": {
-        "ecmaVersion": "latest"
+        "ecmaVersion": "latest",
     },
     "rules": {
-    }
-}
+        "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 1, "maxBOF": 1}],
+        "comma-dangle": ["error", "always-multiline"],
+    },
+};

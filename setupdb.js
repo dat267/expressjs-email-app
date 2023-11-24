@@ -6,7 +6,7 @@ const connection = mysql.createConnection({
   user: 'wpr',
   password: 'fit2023',
   database: 'wpr2023',
-  port: '3306'
+  port: '3306',
 });
 
 function hashPassword(password) {

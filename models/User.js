@@ -1,5 +1,13 @@
-const mysql = require('mysql2');
 const crypto = require('crypto');
+const mysql = require('mysql2');
+
+const connection = mysql.createPool({
+  host: 'localhost',
+  user: 'wpr',
+  password: 'fit2023',
+  database: 'wpr2023',
+  port: '3306',
+});
 
 function hashPassword(password) {
   const hash = crypto.createHash('sha256');
@@ -33,19 +41,6 @@ function getExpirationTime(seconds) {
   const unixTimeInSeconds = Math.floor(Date.now() / 1000);
   return unixTimeInSeconds + seconds / 1000;
 }
-
-const connection = mysql.createPool({
-  host: 'localhost',
-  user: 'wpr',
-  password: 'fit2023',
-  database: 'wpr2023',
-  port: '3306'
-});
-
-exports.createUser = function (fullName, email, password, callback) {
-  const query = 'INSERT INTO User(fullName, email, password) VALUES (?, ?, ?)';
-  connection.query(query, [fullName, email, password], callback);
-};
 
 exports.signup = function (fullName, email, password, rePassword, callback) {
   if (!fullName || !email || !password || password !== rePassword) {
@@ -95,7 +90,7 @@ exports.authenticate = function (email, token, callback) {
     connection.query(query, [email], (err, results) => {
       if (err) return callback(err, null);
       if (results.length > 0 && results[0].token === token) {
-        const userObject = {email: email, fullName: results[0].fullName};
+        const userObject = results[0];
         return callback(null, userObject);
       } else {
         return callback(null, null);

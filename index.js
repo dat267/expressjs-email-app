@@ -1,7 +1,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const {renderPage} = require('./renderPage');
 const {signin, signup, authenticate, findUserByEmail} = require('./models/User');
+const {getEmailsByRecipientId} = require('./models/Email');
 
 const app = express();
 
@@ -9,10 +9,12 @@ app.use(express.static('public'));
 
 app.set('view engine', 'ejs');
 
-// Middleware
+/* Middleware */
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+
+/* Functions */
 
 /* Sign in */
 app.get('/', (req, res) => {
@@ -20,7 +22,7 @@ app.get('/', (req, res) => {
     const token = req.cookies.accessToken;
     authenticate(email, token, (err, userObject) => {
         if (err || !userObject) {
-            renderPage(res, 'Sign in', 'signin', null);
+            res.render('layout', {title: 'Sign in', main: 'signin', user: null});
         } else {
             res.redirect('/inbox');
         }
@@ -44,7 +46,7 @@ app.post('/signin', (req, res) => {
 
 /* Sign up */
 app.get('/signup', (req, res) => {
-    renderPage(res, 'Sign up', 'signup');
+    res.render('layout', {title: 'Sign up', main: 'signup', user: null});
 });
 app.post('/signup', (req, res) => {
     const {fullName, email, password, rePassword} = req.body;
@@ -73,7 +75,14 @@ app.get('/inbox', (req, res) => {
         if (err || !userObject) {
             res.redirect('/');
         } else {
-            renderPage(res, 'Inbox', 'inbox', userObject);
+            getEmailsByRecipientId(userObject.id, (err, emails) => {
+                if (err) {
+                    res.send('Cannot load emails');
+                }
+                else {
+                    res.render('layout', {title: 'Inbox', main: 'inbox', user: userObject, receivedEmails: emails});
+                }
+            });
         }
     });
 });
@@ -86,7 +95,7 @@ app.get('/outbox', (req, res) => {
         if (err || !userObject) {
             res.redirect('/');
         } else {
-            renderPage(res, 'Outbox', 'outbox', userObject);
+            res.render('layout', {title: 'Outbox', main: 'outbox', user: userObject});
         }
     });
 });
@@ -99,13 +108,13 @@ app.get('/compose', (req, res) => {
         if (err || !userObject) {
             res.redirect('/');
         } else {
-            renderPage(res, 'Compose', 'compose', userObject);
+            res.render('layout', {title: 'Compose', main: 'compose', user: userObject});
         }
     });
 });
 
-/* Check email api */
-app.post('/checkEmail', (req, res) => {
+/* Check email exist api */
+app.post('/checkEmailExist', (req, res) => {
     const {email} = req.body;
     findUserByEmail(email, (err, userObject) => {
         if (err) throw err;
