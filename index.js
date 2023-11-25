@@ -1,132 +1,145 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const {signin, signup, authenticate, findUserByEmail} = require('./models/User');
-const {getEmailsByRecipientId} = require('./models/Email');
+const express = require('express')
+const cookieParser = require('cookie-parser')
+const { Email } = require('./models/Email')
+const { User } = require('./models/User')
 
-const app = express();
+const app = express()
 
-app.use(express.static('public'));
+app.use(express.static('public'))
 
-app.set('view engine', 'ejs');
+app.set('view engine', 'ejs')
 
 /* Middleware */
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 /* Functions */
 
 /* Sign in */
-app.get('/', (req, res) => {
-    const email = req.cookies.email;
-    const token = req.cookies.accessToken;
-    authenticate(email, token, (err, userObject) => {
-        if (err || !userObject) {
-            res.render('layout', {title: 'Sign in', main: 'signin', user: null});
-        } else {
-            res.redirect('/inbox');
-        }
-    });
-});
-app.post('/signin', (req, res) => {
-    const {email, password} = req.body;
-    const oneDay = 60 * 60 * 24 * 1000;
-    signin(email, password, function (err, user) {
-        if (err) {
-            res.status(500).json({error: err.message});
-            // res.redirect('/');
-        } else {
-            res.cookie('email', user.email, {maxAge: oneDay});
-            res.cookie('fullName', user.fullName, {maxAge: oneDay});
-            res.cookie('accessToken', user.accessToken, {maxAge: oneDay});
-            res.redirect('/inbox');
-        }
-    });
-});
+app.get('/', async (req, res) => {
+  const email = req.cookies.email
+  const token = req.cookies.token
+  try {
+    const user = await User.authenticate(email, token)
+    if (user) {
+      res.redirect('/inbox')
+    } else {
+      res.render('layout', { title: 'Sign in', main: 'signin', user: null })
+    }
+  } catch (err) {
+    console.error(err)
+    res.render('layout', { title: 'Sign in', main: 'signin', user: null })
+  }
+})
+
+app.post('/', async (req, res) => {
+  const { email, password } = req.body
+  const oneDay = 60 * 60 * 24 * 1000
+  try {
+    const user = await User.signin(email, password)
+    res.cookie('email', user.email, { secure: true, httpOnly: true, maxAge: oneDay })
+    res.cookie('fullName', user.fullName, { secure: true, httpOnly: true, maxAge: oneDay })
+    res.cookie('token', user.token, { secure: true, httpOnly: true, maxAge: oneDay })
+    res.redirect('/inbox')
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 /* Sign up */
 app.get('/signup', (req, res) => {
-    res.render('layout', {title: 'Sign up', main: 'signup', user: null});
-});
-app.post('/signup', (req, res) => {
-    const {fullName, email, password, rePassword} = req.body;
-    signup(fullName, email, password, rePassword, (err, message) => {
-        if (err) {
-            res.status(500).json({error: err.message});
-        } else {
-            res.send(message);
-        }
-    });
-});
+  res.render('layout', { title: 'Sign up', main: 'signup', user: null })
+})
+app.post('/signup', async (req, res) => {
+  const { fullName, email, password, rePassword } = req.body
+  try {
+    const user = await User.signup(fullName, email, password, rePassword)
+    res.send(`Sign up complete for ${user.fullName}. You can now sign in.`)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 /* Sign out */
 app.get('/signout', (req, res) => {
-    res.clearCookie('email');
-    res.clearCookie('fullName');
-    res.clearCookie('accessToken');
-    res.redirect('/');
-});
+  res.clearCookie('email')
+  res.clearCookie('fullName')
+  res.clearCookie('token')
+  res.redirect('/')
+})
 
 /* Inbox */
-app.get('/inbox', (req, res) => {
-    const email = req.cookies.email;
-    const accessToken = req.cookies.accessToken;
-    authenticate(email, accessToken, (err, userObject) => {
-        if (err || !userObject) {
-            res.redirect('/');
-        } else {
-            getEmailsByRecipientId(userObject.id, (err, emails) => {
-                if (err) {
-                    res.send('Cannot load emails');
-                }
-                else {
-                    res.render('layout', {title: 'Inbox', main: 'inbox', user: userObject, receivedEmails: emails});
-                }
-            });
-        }
-    });
-});
+app.get('/inbox', async (req, res) => {
+  const email = req.cookies.email
+  const token = req.cookies.token
+  try {
+    const user = await User.authenticate(email, token)
+    const receivedEmails = await Email.getEmailsByRecipientId(user.id)
+    res.render('layout', { title: 'Inbox', main: 'inbox', user, receivedEmails })
+  } catch (err) {
+    console.error(err)
+    res.redirect('/')
+  }
+})
+app.get('/inbox/:id', async (req, res) => {
+  const userEmail = req.cookies.email
+  const token = req.cookies.token
+  const emailId = Number(req.params.id)
+  try {
+    const user = await User.authenticate(userEmail, token)
+    const email = await Email.getReceivedEmailById(emailId, user.id)
+    if (email) {
+      res.render('layout', { title: 'Email', main: 'email', user, email })
+    } else {
+      console.log(email)
+      res.status(404).render('layout', { title: '404 - email not found', main: '404', user, notFound: 'email' })
+    }
+  } catch (err) {
+    console.error(err)
+    res.redirect('/')
+  }
+})
 
 /* Outbox */
-app.get('/outbox', (req, res) => {
-    const email = req.cookies.email;
-    const accessToken = req.cookies.accessToken;
-    authenticate(email, accessToken, (err, userObject) => {
-        if (err || !userObject) {
-            res.redirect('/');
-        } else {
-            res.render('layout', {title: 'Outbox', main: 'outbox', user: userObject});
-        }
-    });
-});
+app.get('/outbox', async (req, res) => {
+  const email = req.cookies.email
+  const token = req.cookies.token
+  try {
+    const user = await User.authenticate(email, token)
+    res.render('layout', { title: 'Outbox', main: 'outbox', user })
+  } catch (err) {
+    res.send(err)
+    // res.redirect('/')
+  }
+})
 
 /* Compose */
-app.get('/compose', (req, res) => {
-    const email = req.cookies.email;
-    const accessToken = req.cookies.accessToken;
-    authenticate(email, accessToken, (err, userObject) => {
-        if (err || !userObject) {
-            res.redirect('/');
-        } else {
-            res.render('layout', {title: 'Compose', main: 'compose', user: userObject});
-        }
-    });
-});
+app.get('/compose', async (req, res) => {
+  const email = req.cookies.email
+  const token = req.cookies.token
+  try {
+    const user = await User.authenticate(email, token)
+    res.render('layout', { title: 'Compose', main: 'compose', user })
+  } catch (err) {
+    res.redirect('/')
+  }
+})
 
-/* Check email exist api */
-app.post('/checkEmailExist', (req, res) => {
-    const {email} = req.body;
-    findUserByEmail(email, (err, userObject) => {
-        if (err) throw err;
-        if (userObject) {
-            res.json({exists: true});
-        }
-        else {
-            res.json({exists: false});
-        }
-    });
-});
+/* Check email exist with api */
+app.post('/checkEmailExist', async (req, res) => {
+  const { email } = req.body
+  try {
+    if (await User.findUserByEmail(email)) {
+      res.json({ exists: true })
+    } else {
+      res.json({ exists: false })
+    }
+  } catch (err) {
+    res.json({ exists: false })
+  }
+})
 
 app.listen(8000, () => {
-    console.log('Server started on port 8000');
-});
+  console.log('Server started on port 8000')
+})

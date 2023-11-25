@@ -1,3 +1,13 @@
 <main>
-  <%= receivedEmails %>
+  <ul>
+    <% receivedEmails.forEach(function(email) { %>
+      <li>
+        <%= email.senderFullName %>,
+          <%= email.senderEmail %>,
+            <%= email.subject %>,
+              <%= email.body %>
+      </li>
+      <% }); %>
+  </ul>
+  <%= JSON.stringify(receivedEmails) %>
 </main>

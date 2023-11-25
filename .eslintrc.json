@@ -1,0 +1,21 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "standard",
+        "plugin:promise/recommended",
+        "plugin:jsdoc/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
+    "plugins": [
+        "jsdoc",
+        "promise"
+    ],
+    "rules": {}
+}
