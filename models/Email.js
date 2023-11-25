@@ -157,6 +157,10 @@ exports.Email = class {
  * @returns {Promise<object[]>} - A Promise that resolves to an array of enhanced email objects with additional information about sender's and recipient's full names and emails.
  */
 async function enhanceEmails (emails) {
+  if (emails.length === 0) {
+    return emails
+  }
+
   // Extract unique sender and recipient IDs from the emails
   const userIds = new Set([
     ...emails.map((email) => email.senderId),
@@ -175,7 +179,6 @@ async function enhanceEmails (emails) {
   const enhancedEmails = emails.map((email) => {
     const senderInfo = userMap.get(email.senderId) || {}
     const recipientInfo = userMap.get(email.recipientId) || {}
-
     return {
       ...email,
       senderFullName: senderInfo.fullName,
@@ -184,6 +187,5 @@ async function enhanceEmails (emails) {
       recipientEmail: recipientInfo.email
     }
   })
-
   return enhancedEmails
 }
