@@ -15,6 +15,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 /* Functions */
+const ITEMS_PER_PAGE = 10 // Adjust this based on your preference
 
 /* Sign in */
 app.get('/', async (req, res) => {
@@ -87,20 +88,33 @@ app.get('/signout', (req, res) => {
 })
 
 /* Inbox */
-app.get('/inbox', async (req, res) => {
+app.get('/inbox', (req, res) => {
+  // Redirect to the first page
+  res.redirect('/inbox/1')
+})
+app.get('/inbox/:page', async (req, res) => {
   const email = req.cookies.email
   const token = req.cookies.token
+
   try {
     const user = await User.authenticate(email, token)
+    const page = parseInt(req.params.page, 10) || 1 // Get the page number from the URL parameter
+
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+
     const receivedEmails = await Email.getEmailsByRecipientId(user.id)
-    res.render('layout', { title: 'Inbox', main: 'inbox', user, receivedEmails })
+
+    // Extract only the emails for the current page
+    const paginatedEmails = receivedEmails.slice(startIndex, endIndex)
+
+    res.render('layout', { title: 'Inbox', main: 'inbox', user, receivedEmails: paginatedEmails, currentPage: page, totalPages: Math.ceil(receivedEmails.length / ITEMS_PER_PAGE) })
   } catch (err) {
     console.error(err)
     res.status(403).render('layout', { title: '403 - access denied', main: '403', err })
-    // res.redirect('/')
+    // res.redirect('/');
   }
 })
-// TODO: pagination
 
 app.get('/inbox/email/:id', async (req, res) => {
   const userEmail = req.cookies.email
@@ -122,19 +136,30 @@ app.get('/inbox/email/:id', async (req, res) => {
 })
 
 /* Outbox */
-app.get('/outbox', async (req, res) => {
+app.get('/outbox', (req, res) => {
+  // Redirect to the first page
+  res.redirect('/outbox/1')
+})
+app.get('/outbox/:page', async (req, res) => {
   const email = req.cookies.email
   const token = req.cookies.token
+  const page = parseInt(req.params.page) || 1 // Default to page 1 if no page parameter is provided
+
   try {
     const user = await User.authenticate(email, token)
-    res.render('layout', { title: 'Outbox', main: 'outbox', user })
+    const sentEmails = await Email.getEmailsBySenderId(user.id)
+
+    // Implement pagination
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    const paginatedEmails = sentEmails.slice(startIndex, endIndex)
+
+    res.render('layout', { title: 'Outbox', main: 'outbox', user, sentEmails: paginatedEmails, currentPage: page })
   } catch (err) {
     console.error(err)
     res.status(403).render('layout', { title: '403 - access denied', main: '403', err })
-    // res.redirect('/')
   }
 })
-// TODO: pagination
 
 app.get('/outbox/email/:id', async (req, res) => {
   const userEmail = req.cookies.email
