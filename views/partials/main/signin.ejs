@@ -1,13 +1,26 @@
 <main>
   <form action="/" method="post">
     <h1>Sign In</h1>
+
     <label>Email:</label><br>
-    <input type="email" name="email" required><br>
+    <input type="email" name="email" value="<%= typeof email != 'undefined' && email || '' %>" required><br>
+
     <label>Password:</label><br>
-    <input type="password" name="password" required><br>
+    <input type="password" name="password" value="<%= typeof password != 'undefined' && password || '' %>" required><br>
+
     <input type="submit" value="Sign In">
+
+    <% if (typeof errMessages !='undefined' && errMessages && errMessages.length> 0) { %>
+      <div class="error-messages">
+        <% errMessages.forEach(function(message) { %>
+          <p>
+            <%= message %>
+          </p>
+          <% }); %>
+      </div>
+      <% } %>
+
   </form>
-  <br>
   <a href="/signup">Sign Up</a>
 </main>
 <link rel="stylesheet" href="styles/signin.css">

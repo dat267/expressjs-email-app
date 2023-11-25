@@ -1,6 +1,6 @@
 <header>
   <nav id="top-navbar">
-    <% if(user) { %>
+    <% if(typeof user !='undefined' && user) { %>
       <span>
         <%= user.email %>
       </span>

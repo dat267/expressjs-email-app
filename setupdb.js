@@ -70,8 +70,8 @@ async function createTables () {
    * - subject: Subject of the email
    * - body: Body text of the email
    * - timeSent: Date and time when the email was sent (default is the current timestamp)
-   * - deleted_by_sender: Boolean indicating whether the sender deleted the email (default is false)
-   * - deleted_by_receiver: Boolean indicating whether the receiver deleted the email (default is false)
+   * - deletedBySender: Boolean indicating whether the sender deleted the email (default is false)
+   * - deletedByRecipient: Boolean indicating whether the receiver deleted the email (default is false)
    */
   const createEmailTable = `CREATE TABLE IF NOT EXISTS Email(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -80,8 +80,8 @@ async function createTables () {
     subject VARCHAR(255),
     body TEXT,
     timeSent DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deleted_by_sender BOOLEAN DEFAULT FALSE,
-    deleted_by_receiver BOOLEAN DEFAULT FALSE,
+    deletedBySender BOOLEAN DEFAULT FALSE,
+    deletedByRecipient BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (senderId) REFERENCES User(id),
     FOREIGN KEY (recipientId) REFERENCES User(id)
   )`

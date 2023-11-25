@@ -1,59 +1,36 @@
 <main>
   <form id="signupForm" action="/signup" method="post">
     <h1>Sign Up</h1>
+
     <label>Full Name:</label><br>
-    <input id="fullNameInput" type="text" name="fullName" required><br>
-    <span id="fullNameError" style="color:red;"></span><br>
+    <input id="fullNameInput" type="text" name="fullName"
+      value="<%= typeof fullName != 'undefined' && fullName || '' %>" required><br>
+
     <label>Email:</label><br>
-    <input id="emailInput" type="email" name="email" required><br>
-    <span id="emailError" style="color:red;"></span><br>
+    <input id="emailInput" type="email" name="email" value="<%= typeof email != 'undefined' && email || '' %>"
+      required><br>
+
     <label>Password:</label><br>
-    <input id="passwordInput" type="password" name="password" required><br>
-    <span id="passwordError" style="color:red;"></span><br>
+    <input id="passwordInput" type="password" name="password"
+      value="<%= typeof password != 'undefined' && password || '' %>" required><br>
+
     <label>Repeat Password:</label><br>
-    <input id="rePasswordInput" type="password" name="rePassword" required><br>
-    <span id="rePasswordError" style="color:red;"></span><br>
+    <input id="rePasswordInput" type="password" name="rePassword"
+      value="<%= typeof rePassword != 'undefined' && rePassword || '' %>" required><br>
+
     <input type="submit" value="Sign Up">
+
+    <% if (typeof errMessages !='undefined' && errMessages && errMessages.length> 0) { %>
+      <div class="error-messages">
+        <% errMessages.forEach(function(message) { %>
+          <p>
+            <%= message %>
+          </p>
+          <% }); %>
+      </div>
+      <% } %>
+
   </form>
   <br>
   <a href="/">Sign In</a>
 </main>
-<script>
-  document.getElementById('signupForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (validateForm()) {
-      const email = document.getElementById('emailInput').value;
-      fetch('/checkEmailExist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({email: email}),
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.exists) {
-            document.getElementById('emailError').innerHTML = 'This email address is already used.';
-          } else {
-            document.getElementById('signupForm').submit();
-          }
-        });
-    }
-  });
-
-  function validateForm() {
-    const fullName = document.getElementById('fullNameInput').value;
-    const email = document.getElementById('emailInput').value;
-    const password = document.getElementById('passwordInput').value;
-    const rePassword = document.getElementById('rePasswordInput').value;
-    if (password.length < 6) {
-      document.getElementById('passwordError').innerHTML = 'Please enter a password that is at least 6 characters long.';
-      return false;
-    }
-    if (password !== rePassword) {
-      document.getElementById('rePasswordError').innerHTML = 'The passwords do not match.';
-      return false;
-    }
-    return true;
-  }
-</script>

@@ -20,27 +20,33 @@ exports.User = class {
    * @throws {Error} - Throws an error if any of the required fields is missing, passwords do not match, if the email address is already in use, or if the password is too short.
    */
   static async signup (fullName, email, password, rePassword) {
+    const errors = []
+
     if (!fullName) {
-      throw new Error('Full name is required.')
+      errors.push(new Error('Full name is required.'))
     }
     if (!email) {
-      throw new Error('Email is required.')
+      errors.push(new Error('Email is required.'))
     }
     if (!password) {
-      throw new Error('Password is required.')
+      errors.push(new Error('Password is required.'))
     }
     if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters long.')
+      errors.push(new Error('Password must be at least 6 characters long.'))
     }
     if (password !== rePassword) {
-      throw new Error('Passwords do not match.')
+      errors.push(new Error('Passwords do not match.'))
     }
 
     const checkEmailQuery = 'SELECT * FROM User WHERE email = ?'
     const [result] = await pool.query(checkEmailQuery, [email])
 
     if (Array.isArray(result) && result.length > 0) {
-      throw new Error('Email address is already in use. Please choose another.')
+      errors.push(new Error('Email address is already in use. Please choose another.'))
+    }
+
+    if (errors.length > 0) {
+      throw errors
     }
 
     const hashedPassword = hashPassword(password)
@@ -61,14 +67,20 @@ exports.User = class {
    * @param {string} email - The email address of the user attempting to sign in.
    * @param {string} password - The password provided by the user for authentication.
    * @returns {Promise<object>} - A Promise that resolves to an object representing the authenticated user with properties such as email, token, and expirationTime.
-   * @throws {Error} - Throws an error if the email or password is missing, if the email is not found in the database, or if the provided password is invalid.
+   * @throws {Error[]} - Throws an error if the email or password is missing, if the email is not found in the database, or if the provided password is invalid.
    */
   static async signin (email, password) {
+    const errors = []
+
     if (!email) {
-      throw new Error('Email is required')
+      errors.push(new Error('Email is required'))
     }
     if (!password) {
-      throw new Error('Password is required')
+      errors.push(new Error('Password is required'))
+    }
+
+    if (errors.length > 0) {
+      throw errors
     }
 
     const query = 'SELECT * FROM User WHERE email = ?'
@@ -85,7 +97,9 @@ exports.User = class {
       user.expirationTime = expirationTime
       return user
     } else {
-      throw new Error('Invalid email or password')
+      errors.push(new Error('Invalid email or password'))
+      throw errors
+      // throw new Error('Invalid email or password')
     }
   }
 
@@ -97,11 +111,17 @@ exports.User = class {
    * @throws {Error} - Throws an error if the email or token is missing, if the user is not found, if the token is invalid, or if the token has expired.
    */
   static async authenticate (email, token) {
+    const errors = []
+
     if (!email) {
-      throw new Error('Email is required')
+      errors.push(new Error('Email is required'))
     }
     if (!token) {
-      throw new Error('Token is required')
+      errors.push(new Error('Token is required'))
+    }
+
+    if (errors.length > 0) {
+      throw errors
     }
 
     const query = 'SELECT * FROM User WHERE email = ? AND expirationTime > NOW()'
@@ -111,9 +131,11 @@ exports.User = class {
     if (Array.isArray(results) && results.length > 0 && results[0].token === token) {
       return results[0]
     } else if (Array.isArray(results) && results.length > 0) {
-      throw new Error('Invalid token')
+      errors.push(new Error('Invalid token'))
+      throw errors
     } else {
-      throw new Error('User not found')
+      errors.push(new Error('User not found'))
+      throw errors
     }
   }
 
@@ -123,7 +145,7 @@ exports.User = class {
    * @returns {Promise<object|null>} - A Promise that resolves to an object representing the user found in the database, or null if the user is not found.
    * @throws {Error} - Throws an error if the email is missing.
    */
-  static async findUserByEmail (email) {
+  static async getUserByEmail (email) {
     if (!email) {
       throw new Error('Email is required')
     }
