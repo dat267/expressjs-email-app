@@ -3,37 +3,24 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 36px;
+    font-size: 24px;
     color: #fff;
     text-decoration: none;
     padding: 20px;
     flex: 1;
   }
 
-  aside {
-    background-color: #1C1917;
-    display: flex;
-    justify-content: space-evenly;
-    flex-direction: column;
+  aside a:hover {
+    background-color: #ddd;
+    color: black;
   }
 
-  .inbox:hover {
-    background-color: #1D4ED8;
-    color: white;
-  }
-
-  .outbox:hover {
-    background-color: #15803D;
-    color: white;
-  }
-
-  .compose:hover {
-    background-color: #7E22CE;
-    color: white;
+  .active {
+    background-color: #22C55E;
   }
 </style>
 <aside>
-  <a href="/inbox" class="inbox">Inbox</a>
-  <a href="/outbox" class="outbox">Outbox</a>
-  <a href="/compose" class="compose">Compose</a>
+  <a href="/inbox" class="<%= main === 'inbox' ? 'active' : '' %>">Inbox</a>
+  <a href=" /outbox" class="<%= main === 'outbox' ? 'active' : '' %>">Outbox</a>
+  <a href="/compose" class="<%= main === 'compose' ? 'active' : '' %>">Compose</a>
 </aside>

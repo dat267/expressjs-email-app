@@ -1,7 +1,12 @@
 <style>
   nav {
+    display: flex;
     overflow: hidden;
     background-color: #1C1917;
+  }
+
+  nav>div:last-child {
+    margin-left: auto;
   }
 
   nav a,
@@ -19,21 +24,42 @@
     background-color: #ddd;
     color: black;
   }
+
+  .active {
+    background-color: #22C55E;
+  }
+
+  .alt-aside {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .alt-aside {
+      display: block;
+    }
+  }
 </style>
 
 <header>
   <nav>
-    <% if (typeof user !='undefined' && user) { %>
+    <div>
+      <% if (typeof user !='undefined' && user) { %>
       <span>
         <%= user.fullName %>
       </span>
-      <span>
+      <span class="<%= main === 'email' ? 'active' : '' %>">
         <%= user.email %>
       </span>
       <a href="/signout">Sign Out</a>
       <% } else { %>
-        <a href="/">Sign in</a>
-        <a href="/signup">Sign up</a>
-        <% } %>
+      <a href="/" class="<%= main === 'signin' ? 'active' : '' %>">Sign in</a>
+      <a href="/signup" class="<%= main === 'signup' ? 'active' : '' %>">Sign up</a>
+      <% } %>
+    </div>
+    <div class="alt-aside">
+      <a href="/inbox" class="<%= main === 'inbox' ? 'active' : '' %>">Inbox</a>
+      <a href="/outbox" class="<%= main === 'outbox' ? 'active' : '' %>">Outbox</a>
+      <a href="/compose" class="<%= main === 'compose' ? 'active' : '' %>">Compose</a>
+    </div>
   </nav>
 </header>

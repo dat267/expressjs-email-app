@@ -1,24 +1,134 @@
+<style>
+  form {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  label {
+    margin-bottom: 5px;
+    color: #555;
+  }
+
+  select,
+  input,
+  textarea {
+    width: 100%;
+    max-width: 960px;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  input[type="file"] {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+
+  label[for="attachment"] {
+    display: inline-block;
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    max-width: 240px;
+    border: none;
+    border-radius: 3px;
+    text-align: center;
+  }
+
+  label[for="attachment"]:hover {
+    background-color: #2980b9;
+  }
+
+  input[type="submit"] {
+    background-color: #3498db;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    max-width: 240px;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: medium;
+
+    form button {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+  }
+
+  input[type="submit"]:hover {
+    background-color: #2980b9;
+  }
+
+  #body {
+    white-space: pre-wrap;
+  }
+</style>
+
 <main>
   <form action="/compose" method="post" enctype="multipart/form-data">
     <h1>Compose Email</h1>
-    <label>Recipient Email:</label><br>
-    <select name="recipientEmail" required>
+    <label for="recipientEmail">Recipient Email:</label>
+    <select name="recipientEmail" id="recipientEmail" required>
+      <option value="" disabled selected>Select Recipient</option>
       <% users.filter(u=> u.email !== user.email).forEach(function(u) { %>
-        <option value="<%= u.email %>">
-          <%= u.email %>
-        </option>
-        <% }); %>
-    </select><br>
+      <option value="<%= u.email %>">
+        <%= u.email %>
+      </option>
+      <% }); %>
+    </select>
 
-    <label>Subject:</label><br>
-    <input type="text" name="subject"><br>
+    <label for="subject">Subject:</label>
+    <input type="text" name="subject" id="subject">
 
-    <label>Body:</label><br>
-    <textarea name="body" rows="4"></textarea><br>
-
-    <label>Attach File:</label><br>
-    <input type="file" name="attachment"><br>
-
+    <label for="body">Body:</label>
+    <textarea name="body" id="body" rows="10"></textarea>
+    <br>
+    <input type="file" name="attachment" id="attachment">
+    <label id="fileNameDisplay" for="attachment">Choose File</label>
+    <br>
     <input type="submit" value="Send">
+    <% if (typeof errorMessage !== 'undefined') { %>
+    <p style="color: red;"><%= errorMessage %></p>
+    <% } else if (typeof successMessage !== 'undefined') { %>
+    <p style="color: green;"><%= successMessage %></p>
+    <% } %>
   </form>
 </main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('attachment');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+    fileInput.addEventListener('change', function() {
+      fileNameDisplay.textContent = this.files[0] ? this.files[0].name : 'No file chosen';
+    });
+  });
+</script>

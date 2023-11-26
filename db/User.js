@@ -42,7 +42,7 @@ exports.User = class {
     const [result] = await pool.query(checkEmailQuery, [email])
 
     if (Array.isArray(result) && result.length > 0) {
-      errors.push(new Error('Email address is already in use. Please choose another.'))
+      errors.push(new Error('Email address is already in use.'))
     }
 
     if (errors.length > 0) {

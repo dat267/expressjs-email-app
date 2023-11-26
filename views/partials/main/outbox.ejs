@@ -1,6 +1,13 @@
 <style>
+  * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .email-list {
     display: flex;
+    flex: 1;
     flex-direction: column;
     width: 100%;
     height: 100%;
@@ -18,8 +25,12 @@
     margin-right: 10px;
   }
 
-  .email-topbar div {
-    flex: 6;
+  .email-topbar .options {
+    flex: 5;
+  }
+
+  .email-topbar .messages {
+    flex: 1;
   }
 
   .delete-button {
@@ -59,6 +70,10 @@
     margin-right: 10px;
   }
 
+  .email-body {
+    height: 1.375em;
+  }
+
   .email-meta {
     flex: 1;
     font-size: 0.8em;
@@ -73,6 +88,35 @@
   .current-page {
     font-weight: bold;
   }
+
+  .pagination {
+    flex: 1;
+    display: inline-block;
+  }
+
+  .pagination a {
+    color: black;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+  }
+
+  .pagination a.current-page {
+    background-color: #22C55E;
+    color: white;
+  }
+
+  .pagination a:hover:not(.current-page) {
+    background-color: #ddd;
+  }
+
+  .error-message {
+    color: #EF4444;
+  }
+
+  .success-message {
+    color: #15803D;
+  }
 </style>
 
 <main>
@@ -83,33 +127,61 @@
       <div class="options">
         <button id="deleteButton" class="delete-button" onclick="handleDelete()">Delete Selected</button>
       </div>
+      <div class="messages" id="messages"></div>
     </li>
     <% sentEmails.forEach(function(email) { %>
-      <li class="email-item">
-        <input type="checkbox" name="checkboxDelete" onchange="handleCheckboxChange()" value="<%= email.id %>">
-        <span class="recipient-name">
-          <%= email.recipientFullName %>
+    <li class="email-item" onclick="redirectToEmail('<%= email.id %>')" style="cursor: pointer;">
+      <input type="checkbox" name="checkboxDelete" onchange="handleCheckboxChange()" value="<%= email.id %>">
+      <span class="recipient-name">
+        <%= email.recipientFullName %>
+      </span>
+      <div class="email-content">
+        <h3 class="email-subject">
+          <%= email.subject ? email.subject: '(no subject)' %>
+        </h3>
+        <p class="email-body">
+          <%= email.body %>
+        </p>
+      </div>
+      <div class="email-meta">
+        <span class="time">
+          <%= new Date(email.timeSent).toLocaleString() %>
         </span>
-        <div class="email-content">
-          <h3 class="email-subject">
-            <%= email.subject %>
-          </h3>
-          <p class="email-body">
-            <%= email.body %>
-          </p>
-        </div>
-        <div class="email-meta">
-          <span class="time">
-            <%= new Date(email.timeSent).toLocaleString() %>
-          </span>
-        </div>
-      </li>
-      <% }); %>
+      </div>
+    </li>
+    <% }); %>
   </ul>
+
+  <div class="pagination">
+    <% const visiblePages=5; %>
+    <% const startPage=Math.max(currentPage - Math.floor(visiblePages / 2), 1); %>
+    <% const endPage=Math.min(startPage + visiblePages - 1, totalPages); %>
+
+    <% if (currentPage> 1) { %>
+    <a href="/outbox/<%= Math.max(currentPage - 1, 1) %>" class="page-link">&laquo;</a>
+    <% } %>
+
+    <% for (let i=startPage; i <=endPage; i++) { %>
+    <a href="/outbox/<%= i %>" class="page-link <%= i === currentPage ? 'current-page' : '' %>">
+      <%= i %>
+    </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+    <a href="/outbox/<%= Math.min(currentPage + 1, totalPages) %>" class="page-link">&raquo;</a>
+    <% } %>
+  </div>
 </main>
 
 <script>
-  function handleCheckAllChange () {
+  function redirectToEmail(emailId) {
+    const targetElement = event.target;
+    if (targetElement.tagName !== 'INPUT') {
+      window.location.href = `/outbox/email/${emailId}`;
+    }
+  }
+
+  function handleCheckAllChange() {
     const checkAllCheckbox = document.getElementById('checkAll');
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach((checkbox) => {
@@ -118,11 +190,12 @@
     });
   }
 
-  async function handleDelete () {
+  async function handleDelete() {
     const checkboxes = document.querySelectorAll('input[name="checkboxDelete"]:checked');
+    const messagesDiv = document.getElementById('messages');
 
     if (checkboxes.length === 0) {
-      alert('Please select at least one email to delete.');
+      messagesDiv.innerHTML = '<div class="error-message">Please select at least 1 email.</div>';
       return;
     }
 
@@ -134,7 +207,9 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ emailIds }),
+        body: JSON.stringify({
+          emailIds,
+        }),
       });
 
       if (response.ok) {
@@ -142,17 +217,22 @@
           const emailItem = checkbox.closest('.email-item');
           emailItem.remove();
 
-          // Reset the checked property to false
           checkbox.checked = false;
           const checkAllCheckbox = document.getElementById('checkAll');
           checkAllCheckbox.checked = false;
         });
+
+        messagesDiv.innerHTML = '<div class="success-message">Emails deleted successfully.</div>';
       } else {
         const data = await response.json();
         console.error(data.error);
+
+        messagesDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
       }
     } catch (error) {
       console.error('Error:', error);
+
+      messagesDiv.innerHTML = '<div class="error-message">An unexpected error occurred.</div>';
     }
   }
 </script>
