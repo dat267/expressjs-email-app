@@ -1,13 +1,5 @@
-const mysql = require('mysql2/promise')
 const crypto = require('crypto')
-
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'wpr',
-  password: 'fit2023',
-  database: 'wpr2023',
-  port: 3306
-})
+const { pool } = require('./middleware/Pool')
 
 /**
  * Hashes a given password using the SHA-256 algorithm.
@@ -15,20 +7,9 @@ const connection = mysql.createConnection({
  * @returns {string} - The hashed password in hexadecimal format.
  */
 function hashPassword (password) {
-  /**
-   * The crypto module provides cryptographic functionality, including hash functions.
-   * @see {@link https://nodejs.org/api/crypto.html}
-   */
   const hash = crypto.createHash('sha256')
   hash.update(password)
-
-  /**
-   * The digest method is used to produce the hash output.
-   * @param {string} [encoding='hex'] - The encoding of the output. Default is 'hex'.
-   * @returns {string} - The hashed password in the specified encoding.
-   */
   const hashedPassword = hash.digest('hex')
-
   return hashedPassword
 }
 
@@ -50,7 +31,7 @@ async function createTables () {
   )`
 
   // Execute the query to create or verify the existence of the User table
-  await (await connection).query(createUserTable)
+  await (await pool).query(createUserTable)
   console.log('User table created')
 
   const createEmailTable = `CREATE TABLE IF NOT EXISTS Email(
@@ -69,7 +50,7 @@ async function createTables () {
   )`
 
   // Execute the query to create or verify the existence of the Email table
-  await (await connection).query(createEmailTable)
+  await (await pool).query(createEmailTable)
   console.log('Email table created')
 }
 
@@ -81,25 +62,16 @@ async function createTables () {
  * @returns {Promise<void>} - Resolves when user insertion is completed.
  */
 async function insertUsers () {
-  // Hash passwords for user insertion
   const hashedPassword1 = hashPassword('password1')
   const hashedPassword2 = hashPassword('password2')
   const hashedPassword3 = hashPassword('password3')
-
-  /**
-   * SQL query to insert users into the User table.
-   * - The INSERT IGNORE statement prevents duplicate entries based on email.
-   * - Columns inserted: fullName, email, password.
-   * - Values for three users are provided, each with a unique combination of name, email, and hashed password.
-   */
   const query = `INSERT IGNORE INTO User(fullName, email, password)
     VALUES
     ('User 1', 'a@a.com', ?),
     ('User 2', 'b@b.com', ?),
     ('User 3', 'c@c.com', ?)`
 
-  // Execute the query with hashed passwords as parameters
-  await (await connection).query(query, [hashedPassword1, hashedPassword2, hashedPassword3])
+  await (await pool).query(query, [hashedPassword1, hashedPassword2, hashedPassword3])
   console.log('Users inserted')
 }
 
@@ -110,14 +82,8 @@ async function insertUsers () {
  * @returns {Promise<void>} - Resolves when the Email table is cleared.
  */
 async function clearEmailTable () {
-  /**
-   * SQL query to delete all rows from the Email table.
-   * This effectively resets the table by removing all email entries.
-   */
   const clearEmailTableQuery = 'DELETE FROM Email'
-
-  // Execute the query to clear the Email table
-  await (await connection).query(clearEmailTableQuery)
+  await (await pool).query(clearEmailTableQuery)
   console.log('Cleared Email table')
 }
 
@@ -129,12 +95,6 @@ async function clearEmailTable () {
  * @returns {Promise<void>} - Resolves when email insertion is completed.
  */
 async function insertEmails () {
-  /**
-   * SQL query to insert emails into the Email table.
-   * - The INSERT IGNORE statement prevents duplicate entries based on sender, recipient, subject, and body.
-   * - Columns inserted: senderId, recipientId, subject, body.
-   * - Values for eight emails are provided, each with a unique combination of sender, recipient, subject, and body.
-   */
   const insertEmailsQuery = `INSERT IGNORE INTO Email(senderId, recipientId, subject, body)
     VALUES
     (1, 2, 'Hello from User 1', 'This is a message from User 1 to User 2'),
@@ -145,43 +105,31 @@ async function insertEmails () {
     (3, 2, 'Hello from User 3', 'This is a message from User 3 to User 2'),
     (1, 2, 'Another message from User 1', 'This is another message from User 1 to User 2'),
     (2, 1, 'Another message from User 2', 'This is another message from User 2 to User 1')`
-
-  // Execute the query to insert emails
-  await (await connection).query(insertEmailsQuery)
+  await (await pool).query(insertEmailsQuery)
   console.log('Emails inserted')
 }
 
 /**
  * Asynchronously sets up the database by creating tables, inserting users and emails,
- * and performing cleanup operations. Closes the database connection when completed.
+ * and performing cleanup operations. Closes the database pool when completed.
  * @async
  * @function
- * @returns {Promise<void>} - Resolves when the database setup is completed and the connection is closed.
+ * @returns {Promise<void>} - Resolves when the database setup is completed and the pool is closed.
  */
 async function main () {
   try {
-    // Create necessary tables
     await createTables()
-
-    // Insert users into the User table
     await insertUsers()
-
-    // Clear all entries from the Email table
     // await clearEmailTable()
-
-    // Insert emails into the Email table
     await insertEmails()
 
     console.log('Database setup completed!')
   } catch (err) {
-    // Handle any errors that occur during database setup
     console.error(err)
   } finally {
-    // Close the database connection regardless of success or failure
-    await (await connection).end()
+    await (await pool).end()
     console.log('Database connection closed!')
   }
 }
 
-// Execute the main function to set up the database
 main()

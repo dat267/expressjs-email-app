@@ -1,13 +1,5 @@
 const crypto = require('crypto')
-const mysql = require('mysql2/promise')
-
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'wpr',
-  password: 'fit2023',
-  database: 'wpr2023',
-  port: 3306
-})
+const { pool } = require('./Pool')
 
 exports.User = class {
   /**
