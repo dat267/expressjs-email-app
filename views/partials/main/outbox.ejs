@@ -1,12 +1,158 @@
+<style>
+  .email-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .email-topbar {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+
+  .email-topbar label {
+    flex: 0.5;
+    margin-right: 10px;
+  }
+
+  .email-topbar div {
+    flex: 6;
+  }
+
+  .delete-button {
+    background-color: #171717;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+  }
+
+  .delete-button:hover {
+    background-color: #dc3545;
+  }
+
+  .email-item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+
+  input[type="checkbox"] {
+    margin-left: 20px;
+    margin-right: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .recipient-name {
+    flex: 0.5;
+    margin-right: 10px;
+    font-weight: bold;
+  }
+
+  .email-content {
+    flex: 5;
+    margin-right: 10px;
+  }
+
+  .email-meta {
+    flex: 1;
+    font-size: 0.8em;
+    color: #888;
+  }
+
+  .page-link {
+    margin: 0 5px;
+    cursor: pointer;
+  }
+
+  .current-page {
+    font-weight: bold;
+  }
+</style>
+
 <main>
-  <ul>
+  <ul class="email-list">
+    <li class="email-topbar">
+      <input type="checkbox" name="checkAll" id="checkAll" onchange="handleCheckAllChange()">
+      <label for="checkAll">Check all</label>
+      <div class="options">
+        <button id="deleteButton" class="delete-button" onclick="handleDelete()">Delete Selected</button>
+      </div>
+    </li>
     <% sentEmails.forEach(function(email) { %>
-      <li>
-        <%= email.senderFullName %>,
-          <%= email.senderEmail %>,
-            <%= email.subject %>,
-              <%= email.body %>
+      <li class="email-item">
+        <input type="checkbox" name="checkboxDelete" onchange="handleCheckboxChange()" value="<%= email.id %>">
+        <span class="recipient-name">
+          <%= email.recipientFullName %>
+        </span>
+        <div class="email-content">
+          <h3 class="email-subject">
+            <%= email.subject %>
+          </h3>
+          <p class="email-body">
+            <%= email.body %>
+          </p>
+        </div>
+        <div class="email-meta">
+          <span class="time">
+            <%= new Date(email.timeSent).toLocaleString() %>
+          </span>
+        </div>
       </li>
       <% }); %>
   </ul>
 </main>
+
+<script>
+  function handleCheckAllChange () {
+    const checkAllCheckbox = document.getElementById('checkAll');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = checkAllCheckbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    });
+  }
+
+  async function handleDelete () {
+    const checkboxes = document.querySelectorAll('input[name="checkboxDelete"]:checked');
+
+    if (checkboxes.length === 0) {
+      alert('Please select at least one email to delete.');
+      return;
+    }
+
+    const emailIds = Array.from(checkboxes).map((checkbox) => checkbox.value);
+
+    try {
+      const response = await fetch('/api/emails', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ emailIds }),
+      });
+
+      if (response.ok) {
+        checkboxes.forEach((checkbox) => {
+          const emailItem = checkbox.closest('.email-item');
+          emailItem.remove();
+
+          // Reset the checked property to false
+          checkbox.checked = false;
+          const checkAllCheckbox = document.getElementById('checkAll');
+          checkAllCheckbox.checked = false;
+        });
+      } else {
+        const data = await response.json();
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+</script>

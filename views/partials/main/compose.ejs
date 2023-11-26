@@ -1,3 +1,24 @@
 <main>
+  <form action="/compose" method="post" enctype="multipart/form-data">
+    <h1>Compose Email</h1>
+    <label>Recipient Email:</label><br>
+    <select name="recipientEmail" required>
+      <% users.filter(u=> u.email !== user.email).forEach(function(u) { %>
+        <option value="<%= u.email %>">
+          <%= u.email %>
+        </option>
+        <% }); %>
+    </select><br>
 
+    <label>Subject:</label><br>
+    <input type="text" name="subject"><br>
+
+    <label>Body:</label><br>
+    <textarea name="body" rows="4"></textarea><br>
+
+    <label>Attach File:</label><br>
+    <input type="file" name="attachment"><br>
+
+    <input type="submit" value="Send">
+  </form>
 </main>

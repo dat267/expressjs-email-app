@@ -40,15 +40,6 @@ function hashPassword (password) {
  * @returns {Promise<void>} - Resolves when all tables are created or verified to exist.
  */
 async function createTables () {
-  /**
-   * SQL statement to create the User table with columns:
-   * - id: Auto-incremented primary key
-   * - fullName: Not null, full name of the user
-   * - email: Unique, not null, email address of the user
-   * - password: Not null, hashed password of the user
-   * - token: Token associated with the user
-   * - expirationTime: Date and time when the token expires
-   */
   const createUserTable = `CREATE TABLE IF NOT EXISTS User(
     id INT PRIMARY KEY AUTO_INCREMENT,
     fullName VARCHAR(255) NOT NULL,
@@ -62,52 +53,24 @@ async function createTables () {
   await (await connection).query(createUserTable)
   console.log('User table created')
 
-  /**
-   * SQL statement to create the Email table with columns:
-   * - id: Auto-incremented primary key
-   * - senderId: Foreign key referencing the User table, representing the sender of the email
-   * - recipientId: Foreign key referencing the User table, representing the recipient of the email
-   * - subject: Subject of the email
-   * - body: Body text of the email
-   * - timeSent: Date and time when the email was sent (default is the current timestamp)
-   * - deletedBySender: Boolean indicating whether the sender deleted the email (default is false)
-   * - deletedByRecipient: Boolean indicating whether the receiver deleted the email (default is false)
-   */
   const createEmailTable = `CREATE TABLE IF NOT EXISTS Email(
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    senderId INT,
-    recipientId INT,
-    subject VARCHAR(255),
-    body TEXT,
-    timeSent DATETIME DEFAULT CURRENT_TIMESTAMP,
-    deletedBySender BOOLEAN DEFAULT FALSE,
-    deletedByRecipient BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (senderId) REFERENCES User(id),
-    FOREIGN KEY (recipientId) REFERENCES User(id)
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  senderId INT,
+  recipientId INT,
+  subject VARCHAR(255),
+  body TEXT,
+  attachmentOriginalName VARCHAR(255) DEFAULT NULL,
+  attachmentSavedName VARCHAR(255) DEFAULT NULL,
+  timeSent DATETIME DEFAULT CURRENT_TIMESTAMP,
+  deletedBySender BOOLEAN DEFAULT FALSE,
+  deletedByRecipient BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (senderId) REFERENCES User(id),
+  FOREIGN KEY (recipientId) REFERENCES User(id)
   )`
 
   // Execute the query to create or verify the existence of the Email table
   await (await connection).query(createEmailTable)
   console.log('Email table created')
-
-  /**
-   * SQL statement to create the Attachment table with columns:
-   * - id: Auto-incremented primary key
-   * - emailId: Foreign key referencing the Email table, representing the email to which the attachment belongs
-   * - fileName: Name of the attached file
-   * - fileData: Binary large object (BLOB) containing the attachment data
-   */
-  const createAttachmentTable = `CREATE TABLE IF NOT EXISTS Attachment(
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    emailId INT,
-    fileName VARCHAR(255),
-    fileData BLOB,
-    FOREIGN KEY (emailId) REFERENCES Email(id)
-  )`
-
-  // Execute the query to create or verify the existence of the Attachment table
-  await (await connection).query(createAttachmentTable)
-  console.log('Attachment table created')
 }
 
 /**
@@ -204,7 +167,7 @@ async function main () {
     await insertUsers()
 
     // Clear all entries from the Email table
-    await clearEmailTable()
+    // await clearEmailTable()
 
     // Insert emails into the Email table
     await insertEmails()

@@ -1,3 +1,42 @@
+<style>
+  .email-details {
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  h2 {
+    color: #333;
+  }
+
+  .sender-info,
+  .recipient-info,
+  .time-sent {
+    color: #888;
+    margin-bottom: 10px;
+  }
+
+  .email-content {
+    line-height: 1.6;
+  }
+</style>
+
 <main>
-  <%= JSON.stringify(email) %>
+  <div class="email-details">
+    <h2>
+      <%= email.subject %>
+    </h2>
+    <p class="sender-info">From: <%= email.senderFullName %> &lt;<%= email.senderEmail %>&gt;</p>
+    <p class="recipient-info">To: <%= email.recipientFullName %> &lt;<%= email.recipientEmail %>&gt;</p>
+    <p class="time-sent">Sent: <%= new Date(email.timeSent).toLocaleString() %>
+    </p>
+    <div class="email-content">
+      <%= email.body %>
+    </div>
+  </div>
 </main>

@@ -1,0 +1,39 @@
+<style>
+  aside a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    color: #fff;
+    text-decoration: none;
+    padding: 20px;
+    flex: 1;
+  }
+
+  aside {
+    background-color: #1C1917;
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: column;
+  }
+
+  .inbox:hover {
+    background-color: #1D4ED8;
+    color: white;
+  }
+
+  .outbox:hover {
+    background-color: #15803D;
+    color: white;
+  }
+
+  .compose:hover {
+    background-color: #7E22CE;
+    color: white;
+  }
+</style>
+<aside>
+  <a href="/inbox" class="inbox">Inbox</a>
+  <a href="/outbox" class="outbox">Outbox</a>
+  <a href="/compose" class="compose">Compose</a>
+</aside>

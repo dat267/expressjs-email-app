@@ -157,6 +157,12 @@ exports.User = class {
     const user = results.length > 0 ? results[0] : null
     return user
   }
+
+  static async getAllUsers () {
+    const query = 'SELECT id, email, fullName FROM User'
+    const [results] = await pool.query(query)
+    return results
+  }
 }
 
 /**

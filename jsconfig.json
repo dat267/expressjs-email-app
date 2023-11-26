@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "target": "ES2020",
-    "jsx": "react",
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
     "alwaysStrict": true,
     "checkJs": true,
-    "allowJs": true,
-    "allowImportingTsExtensions": true,
+    "jsx": "react",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strictFunctionTypes": true,
     "strictNullChecks": true,
-    "strictFunctionTypes": true
+    "target": "ES2020"
   },
   "exclude": [
     "node_modules",

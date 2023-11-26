@@ -1,4 +1,6 @@
 const mysql = require('mysql2/promise')
+const fsPromises = require('fs/promises')
+const path = require('path')
 
 const pool = mysql.createPool({
   host: 'localhost',
@@ -9,6 +11,23 @@ const pool = mysql.createPool({
 })
 
 exports.Email = class {
+  /**
+   * Retrieves an email from the Email table based on the provided email ID.
+   * @param {number} emailId - The unique identifier of the email to retrieve.
+   * @returns {Promise<?object>} - Resolves with the retrieved email object or null if not found.
+   */
+  static async getEmailById (emailId) {
+    const query = 'SELECT * FROM Email WHERE id = ?'
+    const [results] = await pool.query(query, [emailId])
+
+    if (Array.isArray(results)) {
+      const enhancedEmails = await enhanceEmails(results)
+      return enhancedEmails[0]
+    } else {
+      return null
+    }
+  }
+
   /**
    * Retrieves emails from the database based on the recipient's ID, excluding those marked as deleted by the recipient.
    * @param {number} recipientId - The ID of the recipient for whom emails are to be retrieved.
@@ -85,17 +104,32 @@ exports.Email = class {
    * @param {number} recipientId - The ID of the recipient.
    * @param {string} subject - The subject of the email.
    * @param {string} body - The body of the email.
+   * @param {string|null} attachmentOriginalName - The file path of the atta
+   * @param {string|null} attachmentSavedName - The file path of the attachment.chment.
    * @returns {Promise<number>} - A Promise that resolves to the ID of the newly created email.
    */
-  static async createEmail (senderId, recipientId, subject, body) {
+  static async createEmail (senderId, recipientId, subject, body, attachmentOriginalName, attachmentSavedName) {
     const timeSent = new Date().toISOString().slice(0, 19).replace('T', ' ') // Current timestamp
 
-    const query = `
-    INSERT INTO Email (senderId, recipientId, subject, body, timeSent)
-    VALUES (?, ?, ?, ?, ?)
-  `
+    let query, values
 
-    const [result] = await pool.query(query, [senderId, recipientId, subject, body, timeSent])
+    if (attachmentSavedName) {
+      // If there is an attachment, include the attachment file path in the query
+      query = `
+        INSERT INTO Email (senderId, recipientId, subject, body, timeSent, attachmentOriginalName, attachmentSavedName)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `
+      values = [senderId, recipientId, subject, body, timeSent, attachmentOriginalName, attachmentSavedName]
+    } else {
+      // If no attachment, use the original query without the attachment file path
+      query = `
+        INSERT INTO Email (senderId, recipientId, subject, body, timeSent)
+        VALUES (?, ?, ?, ?, ?)
+      `
+      values = [senderId, recipientId, subject, body, timeSent]
+    }
+
+    const [result] = await pool.query(query, values)
 
     if ('insertId' in result) {
       return result.insertId
@@ -107,46 +141,72 @@ exports.Email = class {
   /**
    * Marks an email as deleted by the sender in the database.
    * If both deletedBySender and deletedByRecipient are true, the entire row is deleted.
+   * Also deletes the attachment file from the /uploads folder.
    * @param {number} emailId - The ID of the email to be marked as deleted.
    * @param {number} senderId - The ID of the sender.
    * @returns {Promise<void>} - A Promise that resolves when the email is marked as deleted by the sender.
    */
   static async deleteEmailForSender (emailId, senderId) {
+    const selectQuery = 'SELECT attachmentSavedName FROM Email WHERE id = ? AND senderId = ?'
     const updateQuery = 'UPDATE Email SET deletedBySender = TRUE WHERE id = ? AND senderId = ?'
     const deleteQuery = 'DELETE FROM Email WHERE id = ? AND deletedByRecipient = TRUE'
 
-    const [updateResult] = await pool.query(updateQuery, [emailId, senderId])
+    const [emailInfo] = await pool.query(selectQuery, [emailId, senderId])
 
-    if ('affectedRows' in updateResult && updateResult.affectedRows === 0) {
+    if (Array.isArray(emailInfo) && !emailInfo.length) {
       throw new Error('Email not found or unauthorized to delete.')
     }
 
+    await pool.query(updateQuery, [emailId, senderId])
+
     // Check if both flags are true and delete the row if needed
+    const [updateResult] = await pool.query(deleteQuery, [emailId])
+
     if ('affectedRows' in updateResult && updateResult.affectedRows > 0) {
-      await pool.query(deleteQuery, [emailId])
+      // Delete attachment file
+      await this.deleteAttachment(emailInfo[0].attachmentSavedName)
     }
   }
 
   /**
    * Marks an email as deleted by the recipient in the database.
    * If both deletedBySender and deletedByRecipient are true, the entire row is deleted.
+   * Also deletes the attachment file from the /uploads folder.
    * @param {number} emailId - The ID of the email to be marked as deleted.
    * @param {number} recipientId - The ID of the recipient.
    * @returns {Promise<void>} - A Promise that resolves when the email is marked as deleted by the recipient.
    */
   static async deleteEmailForRecipient (emailId, recipientId) {
+    const selectQuery = 'SELECT attachmentSavedName FROM Email WHERE id = ? AND recipientId = ?'
     const updateQuery = 'UPDATE Email SET deletedByRecipient = TRUE WHERE id = ? AND recipientId = ?'
     const deleteQuery = 'DELETE FROM Email WHERE id = ? AND deletedBySender = TRUE'
 
-    const [updateResult] = await pool.query(updateQuery, [emailId, recipientId])
+    const [emailInfo] = await pool.query(selectQuery, [emailId, recipientId])
 
-    if ('affectedRows' in updateResult && updateResult.affectedRows === 0) {
+    if (Array.isArray(emailInfo) && !emailInfo.length) {
       throw new Error('Email not found or unauthorized to delete.')
     }
 
+    await pool.query(updateQuery, [emailId, recipientId])
+
     // Check if both flags are true and delete the row if needed
+    const [updateResult] = await pool.query(deleteQuery, [emailId])
+
     if ('affectedRows' in updateResult && updateResult.affectedRows > 0) {
-      await pool.query(deleteQuery, [emailId])
+      // Delete attachment file
+      await this.deleteAttachment(emailInfo[0].attachmentSavedName)
+    }
+  }
+
+  /**
+   * Deletes the attachment file associated with the given file name from the /uploads folder.
+   * @param {string} attachmentSavedName - The saved file name of the attachment.
+   * @returns {Promise<void>} - A Promise that resolves when the attachment file is deleted.
+   */
+  static async deleteAttachment (attachmentSavedName) {
+    if (attachmentSavedName) {
+      const filePath = path.join(__dirname, 'uploads', attachmentSavedName)
+      await fsPromises.unlink(filePath)
     }
   }
 }
