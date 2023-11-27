@@ -62,17 +62,28 @@ async function createTables () {
  * @returns {Promise<void>} - Resolves when user insertion is completed.
  */
 async function insertUsers () {
-  const hashedPassword1 = hashPassword('password1')
-  const hashedPassword2 = hashPassword('password2')
-  const hashedPassword3 = hashPassword('password3')
+  const hashedPassword1 = hashPassword('password1');
+  const hashedPassword2 = hashPassword('password2');
+  const hashedPassword3 = hashPassword('password3');
+  const hashedPassword4 = hashPassword('password4');
+  const hashedPassword5 = hashPassword('password5');
+
   const query = `INSERT IGNORE INTO User(fullName, email, password)
     VALUES
     ('User 1', 'a@a.com', ?),
     ('User 2', 'b@b.com', ?),
-    ('User 3', 'c@c.com', ?)`
+    ('User 3', 'c@c.com', ?),
+    ('User 4', 'd@d.com', ?),
+    ('User 5', 'e@e.com', ?)`;
 
-  await (await pool).query(query, [hashedPassword1, hashedPassword2, hashedPassword3])
-  console.log('Users inserted')
+  await (await pool).query(query, [
+    hashedPassword1,
+    hashedPassword2,
+    hashedPassword3,
+    hashedPassword4,
+    hashedPassword5,
+  ]);
+  console.log('Users inserted');
 }
 
 /**
@@ -95,19 +106,39 @@ async function clearEmailTable () {
  * @returns {Promise<void>} - Resolves when email insertion is completed.
  */
 async function insertEmails () {
-  const insertEmailsQuery = `INSERT IGNORE INTO Email(senderId, recipientId, subject, body)
+  const insertEmailsQuery = `
+    INSERT IGNORE INTO Email(senderId, recipientId, subject, body)
     VALUES
-    (1, 2, 'Hello from User 1', 'This is a message from User 1 to User 2'),
-    (1, 3, 'Hello from User 1', 'This is a message from User 1 to User 3'),
-    (2, 1, 'Hello from User 2', 'This is a message from User 2 to User 1'),
-    (2, 3, 'Hello from User 2', 'This is a message from User 2 to User 3'),
-    (3, 1, 'Hello from User 3', 'This is a message from User 3 to User 1'),
-    (3, 2, 'Hello from User 3', 'This is a message from User 3 to User 2'),
-    (1, 2, 'Another message from User 1', 'This is another message from User 1 to User 2'),
-    (2, 1, 'Another message from User 2', 'This is another message from User 2 to User 1')`
-  await (await pool).query(insertEmailsQuery)
-  console.log('Emails inserted')
+    (1, 2, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 2 (b@b.com)'),
+    (1, 3, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 3 (c@c.com)'),
+    (2, 1, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 1 (a@a.com)'),
+    (2, 3, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 3 (c@c.com)'),
+    (3, 1, 'Email from User 3', 'This is a message from User 3 (c@c.com) to User 1 (a@a.com)'),
+    (3, 2, 'Email from User 3', 'This is a message from User 3 (c@c.com) to User 2 (b@b.com)'),
+    (1, 2, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 2 (b@b.com)'),
+    (2, 1, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 1 (a@a.com)'),
+    (4, 5, 'Email from User 4', 'This is a message from User 4 (d@d.com) to User 5 (e@e.com)'),
+    (5, 4, 'Email from User 5', 'This is a message from User 5 (e@e.com) to User 4 (d@d.com)'),
+    (1, 3, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 3 (c@c.com)'),
+    (2, 1, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 1 (a@a.com)'),
+    (3, 2, 'Email from User 3', 'This is a message from User 3 (c@c.com) to User 2 (b@b.com)'),
+    (4, 5, 'Email from User 4', 'This is a message from User 4 (d@d.com) to User 5 (e@e.com)'),
+    (5, 4, 'Email from User 5', 'This is a message from User 5 (e@e.com) to User 4 (d@d.com)'),
+    (1, 4, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 4 (d@d.com)'),
+    (2, 5, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 5 (e@e.com)'),
+    (3, 4, 'Email from User 3', 'This is a message from User 3 (c@c.com) to User 4 (d@d.com)'),
+    (4, 1, 'Email from User 4', 'This is a message from User 4 (d@d.com) to User 1 (a@a.com)'),
+    (5, 2, 'Email from User 5', 'This is a message from User 5 (e@e.com) to User 2 (b@b.com)'),
+    (1, 5, 'Email from User 1', 'This is a message from User 1 (a@a.com) to User 5 (e@e.com)'),
+    (2, 4, 'Email from User 2', 'This is a message from User 2 (b@b.com) to User 4 (d@d.com)'),
+    (3, 5, 'Email from User 3', 'This is a message from User 3 (c@c.com) to User 5 (e@e.com)'),
+    (4, 2, 'Email from User 4', 'This is a message from User 4 (d@d.com) to User 2 (b@b.com)'),
+    (5, 3, 'Email from User 5', 'This is a message from User 5 (e@e.com) to User 3 (c@c.com)')`;
+
+  await (await pool).query(insertEmailsQuery);
+  console.log('Emails inserted');
 }
+
 
 /**
  * Asynchronously sets up the database by creating tables, inserting users and emails,
