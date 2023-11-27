@@ -1,33 +1,26 @@
 ---
 services:
-  # apache:
-  #   container_name: apache-container
-  #   image: httpd:latest
-  #   ports:
-  #     - '8081:80'
-  #   volumes:
-  #     - ./public:/usr/local/apache2/htdocs/
-  mysql:
-    container_name: mariadb-container
-    environment:
-      MYSQL_DATABASE: wpr2023
-      MYSQL_PASSWORD: fit2023
-      MYSQL_ROOT_PASSWORD: dbAqJaMcM2BMMHX5mMwKVmvymwVf8VzverWTmpw8MyBZHuqm7us45DZ7kTcMPbpy
-      MYSQL_USER: wpr
-    ports:
-      - "3306:3306"
-    image: mariadb:latest
-    volumes:
-      - mariadb-data:/var/lib/mysql
-  phpmyadmin:
-    container_name: phpmyadmin-container
-    environment:
-      MYSQL_ROOT_PASSWORD: dbAqJaMcM2BMMHX5mMwKVmvymwVf8VzverWTmpw8MyBZHuqm7us45DZ7kTcMPbpy
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-    image: phpmyadmin:latest
-    ports:
-      - '8080:80'
+ mysql:
+   container_name: mariadb-container
+   environment:
+     MYSQL_DATABASE: wpr2023
+     MYSQL_PASSWORD: fit2023
+     MYSQL_ROOT_PASSWORD: dbAqJaMcM2BMMHX5mMwKVmvymwVf8VzverWTmpw8MyBZHuqm7us45DZ7kTcMPbpy
+     MYSQL_USER: wpr
+   image: docker.io/mariadb:latest
+   ports:
+     - "3306:3306"
+   volumes:
+     - mariadb-data:/var/lib/mysql
+ phpmyadmin:
+   container_name: phpmyadmin-container
+   environment:
+     MYSQL_ROOT_PASSWORD: dbAqJaMcM2BMMHX5mMwKVmvymwVf8VzverWTmpw8MyBZHuqm7us45DZ7kTcMPbpy
+     PMA_HOST: mysql
+     PMA_PORT: 3306
+   image: docker.io/phpmyadmin:latest
+   ports:
+     - '8080:80'
 version: '3'
 volumes:
-  mariadb-data:
+ mariadb-data:
