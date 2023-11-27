@@ -99,7 +99,8 @@
     <label for="recipientEmail">Recipient Email:</label>
     <select name="recipientEmail" id="recipientEmail" required>
       <option value="" disabled selected>Select Recipient</option>
-      <% users.filter(u=> u.email !== user.email).forEach(function(u) { %>
+      <% const filteredUsers = users.filter(u => u.email !== user.email); %>
+      <% filteredUsers.forEach(function(u) { %>
       <option value="<%= u.email %>">
         <%= u.email %>
       </option>

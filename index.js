@@ -9,18 +9,20 @@ const { User } = require('./middleware/User')
 const { hasAccessToAttachment } = require('./middleware/Attachment')
 
 const app = express()
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({
+  // limits: {
+  //   fileSize: 50 * 1024 * 1024 // 50MB
+  // },
+  dest: 'uploads/'
+})
 
 app.use(express.static('public'))
 
 app.set('view engine', 'ejs')
 
-/* Middleware */
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
-
-/* Functions */
 
 /* Constants */
 const ITEMS_PER_PAGE = 5

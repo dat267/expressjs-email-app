@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node setupdb.js && node_modules/.bin/nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -16,14 +15,5 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.3"
-  },
-  "devDependencies": {
-    "eslint": "^8.54.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-jsdoc": "^46.9.0",
-    "eslint-plugin-n": "^16.3.1",
-    "eslint-plugin-promise": "^6.1.1",
-    "nodemon": "^3.0.1"
   }
 }
